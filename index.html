@@ -1,1553 +1,419 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>UB-Pro</title>
-<link rel="icon" href="https://ssl.gstatic.com/classroom/favicon.png" />
-
-<script src="https://cdn.tailwindcss.com"></script>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet" />
-<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-
-<style>
-/* GLOBAL STYLES & VARIABLES */
-:root {
-  --primary-purple: #8a2be2;
-  --secondary-pink: #ff69b4;
-  --accent-green: #1DB954;
-  --dark-glass: rgba(18, 18, 18, 0.9);
-  --border-light: rgba(255, 255, 255, 0.1);
-  --border-dark: rgba(0, 0, 0, 0.1);
-  --text-color: #e5e7eb;
-  --secondary-text: #b3b3b3;
-}
-
-/* --- LOADING SCREEN STYLES --- */
-#loading-screen {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(10, 10, 10, 1);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-  transition: opacity 0.5s ease-out;
-}
-#loading-screen.hidden {
-  opacity: 0;
-  pointer-events: none;
-}
-/* Spinner */
-.loading-spinner {
-  border: 8px solid rgba(255,255,255,0.3);
-  border-top: 8px solid var(--accent-green);
-  border-radius: 50%;
-  width: 80px;
-  height: 80px;
-  animation: spin 1.5s linear infinite;
-  margin-bottom: 20px;
-}
-.loading-text {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: var(--accent-green);
-  letter-spacing: 0.1em;
-  text-shadow: 0 0 10px rgba(30,200,100,0.5);
-}
-@keyframes spin {
-  0% {transform: rotate(0deg);}
-  100% {transform: rotate(360deg);}
-}
-
-/* WALLPAPER OPTIONS STYLES */
-#wallpaper-options {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: var(--dark-glass);
-  backdrop-filter: blur(10px);
-  border: 1px solid var(--border-light);
-  padding: 25px;
-  border-radius: 15px;
-  z-index: 1001;
-  display: none;
-  flex-direction: column;
-  align-items: center;
-  width: 300px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.7);
-}
-#wallpaper-options.show {
-  display: flex;
-}
-#wallpaper-options h3 {
-  font-family: 'Orbitron', sans-serif;
-  font-weight: bold;
-  color: var(--accent-green);
-  margin-bottom: 20px;
-}
-.wallpaper-item {
-  width: 100%;
-  padding: 12px;
-  margin: 5px 0;
-  background: rgba(255,255,255,0.08);
-  border: 1px solid var(--border-light);
-  color: var(--text-color);
-  cursor: pointer;
-  border-radius: 8px;
-  text-align: center;
-  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
-  font-size: 0.9rem;
-}
-.wallpaper-item:hover {
-  background: var(--accent-green);
-  color: black;
-  transform: scale(1.03);
-}
-.wallpaper-item.active {
-  background: var(--accent-green);
-  color: black;
-  font-weight: bold;
-  border-color: var(--accent-green);
-}
-
-/* OS WORKSPACE */
-#os-workspace {
-  display: flex;
-  width: 100%;
-  height: 100vh;
-  transition: transform 1s cubic-bezier(0.25, 1, 0.5, 1), opacity 1s ease;
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
-  font-family: 'Segoe UI', sans-serif;
-  overflow: hidden;
-  user-select: none;
-  color: var(--text-color);
-  margin: 0;
-}
-
-/* HORIZONTAL TOP-LEFT SIDEBAR */
-.horizontal-sidebar {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  height: 60px;
-  padding: 0 15px;
-  background: rgba(255,255,255,0.08);
-  border: 1px solid var(--border-light);
-  border-radius: 30px;
-  backdrop-filter: blur(15px) saturate(180%);
-  box-shadow: 0 5px 25px rgba(0,0,0,0.3);
-  transition: all 0.3s ease;
-}
-.horizontal-sidebar:hover {
-  background: rgba(255,255,255,0.15);
-}
-.sidebar-icons {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  margin-left: 15px;
-}
-.sidebar-icon {
-  font-size: 1.4rem;
-  color: var(--text-color);
-  cursor: pointer;
-  transition: color 0.2s ease, transform 0.2s ease;
-  padding: 8px;
-  border-radius: 10px;
-}
-.sidebar-icon:hover {
-  color: #fff;
-  transform: scale(1.1);
-}
-.sidebar-icon.active {
-  color: var(--accent-green);
-}
-.sidebar-search-icon {
-  font-size: 1.3rem;
-  color: var(--secondary-text);
-  cursor: pointer;
-  transition: color 0.2s ease;
-}
-.sidebar-search-icon:hover {
-  color: var(--text-color);
-}
-
-/* MAIN CONTENT */
-main {
-  flex-grow: 1;
-  position: relative;
-  overflow: hidden;
-  padding: 0;
-}
-
-/* Sections with full height */
-.absolute.inset-0 {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start; /* Align content to the top */
-  transition: opacity 0.5s ease;
-  overflow: hidden;
-}
-.absolute.inset-0.hidden {
-  opacity: 0;
-  pointer-events: none;
-  display: none;
-}
-
-/* HOME */
-.home-status-bar {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  font-family: 'Roboto Mono', monospace;
-  font-size: 0.9rem;
-  background: rgba(0,0,0,0.4);
-  padding: 8px 15px;
-  border-radius: 10px;
-  backdrop-filter: blur(8px);
-  border: 1px solid var(--border-light);
-}
-#home-clock {
-  font-weight: bold;
-}
-#battery-icon {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-#battery-icon i {
-  font-size: 1.3rem;
-}
-.battery-low { color: #ff4444; }
-.battery-medium { color: #ffcc00; }
-.battery-full { color: var(--accent-green); }
-#home-title {
-  z-index: 5;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  margin: auto;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
-#home-title h1 {
-  font-family: 'Orbitron', sans-serif;
-  font-weight: 900;
-  letter-spacing: -0.05em;
-}
-#typewriter {
-  font-family: 'Roboto Mono', monospace;
-}
-/* Profile Section - positioned below status bar */
-#profile-section {
-  position: absolute;
-  top: 75px; /* Below status bar */
-  right: 15px;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  padding: 8px 12px;
-  background: rgba(0,0,0,0.4);
-  border-radius: 10px;
-  backdrop-filter: blur(8px);
-  border: 1px solid var(--border-light);
-  transition: background-color 0.2s ease;
-}
-#profile-section:hover {
-  background: rgba(255,255,255,0.1);
-}
-.profile-avatar {
-  width: 35px;
-  height: 35px;
-  border-radius: 50%;
-  background-color: #4a5568; /* Darker gray */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.1rem;
-  border: 2px solid var(--accent-green);
-}
-.profile-avatar img {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  object-fit: cover;
-}
-#profile-name {
-  font-weight: bold;
-  color: var(--text-color);
-}
-
-/* PRO-BROWSER SECTION */
-.pro-browser-container {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start; /* Align content to the top */
-  background: linear-gradient(135deg, #8a2be2 0%, #ff69b4 100%); /* Royal Blue to Hot Pink */
-  color: #ffffff;
-  overflow-x: hidden; /* Prevent horizontal scrollbar from gradient */
-  padding-top: 50px; /* Space from the top */
-  box-sizing: border-box;
-}
-
-.pro-browser-container h1 {
-  font-size: 5em; /* Large Orbitron text */
-  margin-bottom: 20px;
-  text-shadow: 0 0 15px rgba(255, 255, 255, 0.7), /* White glow */
-               0 0 25px rgba(255, 105, 180, 0.5); /* Pink glow */
-}
-
-.pro-browser-search-bar-container {
-  width: 80%;
-  max-width: 600px; /* Limit search bar width */
-  margin: 30px auto;
-  position: relative;
-  display: inline-block; /* For centering */
-}
-
-.pro-browser-search-bar {
-  width: 100%;
-  padding: 15px 20px;
-  border: 2px solid #ffffff; /* White outline */
-  border-radius: 30px; /* Rounded corners */
-  font-size: 1.5em;
-  background: rgba(255, 255, 255, 0.08); /* Very subtle background for glass effect */
-  backdrop-filter: blur(15px) saturate(180%); /* Increased blur and saturation for glass */
-  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3), /* Subtle shadow */
-              inset 0 0 15px rgba(255, 255, 255, 0.3); /* Inner glow/highlight for glass */
-  color: #ffffff;
-  outline: none; /* Remove default outline */
-  transition: all 0.4s ease-in-out; /* Smoother transition */
-  box-sizing: border-box; /* Include padding and border in element's total width and height */
-}
-
-.pro-browser-search-bar::placeholder {
-  color: rgba(255, 255, 255, 0.6);
-}
-
-.pro-browser-search-bar:focus {
-  border-color: #ff69b4; /* Pink outline on focus */
-  background: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 8px 30px rgba(0, 191, 255, 0.5), /* Blueish glow on focus */
-              inset 0 0 20px rgba(255, 255, 255, 0.4); /* Stronger inner glow */
-  transform: translateY(-3px); /* Slight lift on focus */
-}
-
-.pro-browser-shortcuts {
-  margin-top: 30px;
-  display: flex;
-  justify-content: center;
-  gap: 20px; /* Space between shortcuts */
-  flex-wrap: wrap; /* Allow shortcuts to wrap on smaller screens */
-  padding-bottom: 50px; /* Space at the bottom */
-}
-
-.pro-browser-shortcut-link {
-  text-decoration: none;
-  color: #ffffff; /* White text for shortcuts */
-  font-size: 1.2em;
-  padding: 12px 25px;
-  border-radius: 30px; /* More rounded shortcuts */
-  background: rgba(255, 105, 180, 0.3); /* Pinkish background */
-  border: 1px solid rgba(255, 105, 180, 0.5); /* Subtle pink border */
-  transition: all 0.3s ease;
-  cursor: pointer; /* Indicate it's clickable */
-  text-shadow: 0 0 5px rgba(255, 255, 255, 0.5); /* Subtle text glow */
-}
-
-.pro-browser-shortcut-link:hover {
-  background: rgba(255, 105, 180, 0.5); /* More opaque pink on hover */
-  color: #ffffff;
-  transform: translateY(-3px); /* Slight lift on hover */
-  box-shadow: 0 6px 15px rgba(255, 105, 180, 0.5); /* Pink glow on hover */
-}
-
-/* GAMES section */
-#games {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  background: rgba(0,0,0,0.7);
-  backdrop-filter: blur(5px);
-  padding: 30px;
-  overflow: hidden; /* Remove scroll from this container */
-}
-#games h2 {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: var(--accent-green);
-  margin-bottom: 30px;
-  text-shadow: 0 0 10px rgba(30,200,100,0.5);
-}
-#games-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-  width: 100%;
-  max-width: 1200px; /* Limit grid width */
-  padding-bottom: 50px; /* Space at bottom */
-}
-.game-card {
-  cursor: pointer;
-  background: rgba(255,255,255,0.08);
-  border: 1px solid var(--border-light);
-  border-radius: 15px;
-  padding: 15px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  transition: transform 0.2s, box-shadow 0.2s;
-  aspect-ratio: 1 / 1; /* Make cards square */
-  justify-content: center; /* Center content vertically */
-}
-.game-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 12px 30px rgba(0,0,0,0.7);
-}
-.game-card h3 {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 1.5rem;
-  margin-bottom: 10px;
-  color: white;
-}
-/* Placeholder content for game cards */
-.game-card .game-placeholder {
-  width: 100%;
-  height: 100%; /* Fill the card */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0,0,0,0.2);
-  border-radius: 10px;
-  color: var(--secondary-text);
-  font-size: 1.1rem;
-  padding: 10px; /* Add padding */
-  box-sizing: border-box; /* Include padding in height */
-}
-
-/* RELAUN (scratch embed) */
-.relaun-section-wrapper {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0,0,0,0.7);
-  backdrop-filter: blur(5px);
-  padding: 30px;
-  box-sizing: border-box;
-}
-#relaunFrame {
-  width: 100%;
-  height: 100%;
-  border: none;
-  border-radius: 15px;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.5);
-}
-
-/* SETTINGS */
-.settings-section-wrapper {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 30px;
-  background: rgba(15,15,15,0.9);
-  backdrop-filter: blur(10px);
-  box-sizing: border-box;
-}
-.settings-card {
-  background: rgba(255,255,255,0.05);
-  padding: 30px;
-  border-radius: 15px;
-  border: 1px solid var(--border-light);
-  max-width: 600px;
-  width: 100%;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-}
-.settings-card h2 {
-  font-family: 'Orbitron', sans-serif;
-  font-weight: 700;
-  margin-bottom: 25px;
-  color: white;
-}
-.setting-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
-  padding-bottom: 15px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-}
-.setting-item:last-child {
-  border-bottom: none;
-}
-.setting-label {
-  font-family: 'Roboto Mono', monospace;
-  color: var(--text-color);
-  font-size: 1rem;
-}
-.setting-control input[type="range"] {
-  width: 150px;
-  cursor: pointer;
-  accent-color: var(--accent-green);
-}
-.setting-control span {
-  font-family: 'Roboto Mono', monospace;
-  font-weight: bold;
-  color: var(--accent-green);
-  min-width: 40px;
-  text-align: right;
-}
-
-/* modals */
-.modal {
-  display: none;
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: var(--dark-glass);
-  backdrop-filter: blur(15px);
-  padding: 30px;
-  border-radius: 15px;
-  z-index: 1000;
-  border: 1px solid var(--border-light);
-  box-shadow: 0 20px 60px rgba(0,0,0,0.8);
-  color: white;
-  font-family: 'Roboto Mono', monospace;
-}
-/* close button style */
-.settings-modal-close {
-  position: absolute;
-  top: 10px;
-  right: 15px;
-  cursor: pointer;
-  font-weight: 900;
-  font-size: 24px;
-  color: #ff4444;
-  font-family: sans-serif;
-  transition: transform 0.2s;
-}
-.settings-modal-close:hover {
-  transform: scale(1.2);
-}
-
-/* popup ad */
-#popup-ad {
-  position: fixed;
-  top: 10%;
-  right: 2%;
-  background-color: rgba(0,0,0,0.8);
-  color: white;
-  padding: 20px;
-  border-radius: 10px;
-  border: 1px solid rgba(255,255,255,0.2);
-  z-index: 1000;
-  display: none;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-  backdrop-filter: blur(5px);
-}
-#popup-ad.show {
-  display: block;
-}
-.popup-close {
-  position: absolute;
-  top: 5px;
-  right: 10px;
-  font-size: 24px;
-  cursor: pointer;
-  color: #aaa;
-}
-.popup-close:hover {
-  color: white;
-}
-#corner-ad-btn {
-  position: fixed;
-  bottom: 10px;
-  left: 10px;
-  background-color: var(--accent-green);
-  color: black;
-  padding: 8px 12px;
-  border-radius: 5px;
-  font-weight: bold;
-  cursor: pointer;
-  z-index: 999;
-  border: none;
-  font-family: 'Roboto Mono', monospace;
-}
-
-/* PASSES SECTION STYLES */
-.passes-section-wrapper {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start; /* Align content to the top */
-  background: rgba(0,0,0,0.7);
-  backdrop-filter: blur(5px);
-  padding: 30px;
-  overflow-y: auto; /* Allow scrolling if content exceeds height */
-  box-sizing: border-box;
-}
-
-#passes-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
-  width: 100%;
-  max-width: 1200px; /* Limit grid width */
-  padding-bottom: 50px; /* Space at bottom */
-}
-
-.pass-item {
-  background: rgba(255,255,255,0.08);
-  border: 1px solid var(--border-light);
-  border-radius: 15px;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  transition: transform 0.2s, box-shadow 0.2s;
-  color: var(--text-color);
-}
-
-.pass-item:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 12px 30px rgba(0,0,0,0.7);
-}
-
-.pass-item h3 {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 1.5rem;
-  margin-bottom: 10px;
-  color: white;
-}
-
-.pass-item p {
-  font-size: 0.9rem;
-  margin-bottom: 15px;
-  color: var(--secondary-text);
-}
-
-.pass-item .price {
-  font-weight: bold;
-  color: var(--accent-green);
-  margin-bottom: 20px;
-}
-
-.pass-item button {
-  background: var(--accent-green);
-  color: black;
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-weight: bold;
-  cursor: pointer;
-  border: none;
-  transition: background-color 0.2s ease;
-}
-
-.pass-item button:hover {
-  background: #17a64b; /* Darker green */
-}
-
-/* PADLET & CHAT IFRAME STYLES */
-.iframe-section-wrapper {
-  width: 100%;
-  height: 100%; /* Make the wrapper take full height */
-  display: flex; /* Use flexbox to help with alignment */
-  align-items: center;
-  justify-content: center;
-  background: rgba(0,0,0,0.7);
-  backdrop-filter: blur(5px);
-  padding: 30px; /* Keep padding if desired, or adjust */
-  box-sizing: border-box;
-}
-
-.iframe-section-wrapper iframe {
-  width: 100%;
-  height: 100%; /* Make iframe take full width and height of its parent */
-  border: none;
-  border-radius: 15px;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.5);
-}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#f6f7ff" />
+  <title>Flapper — your socials, in one place</title>
+  <style>
+    :root{--ink:#191a2e;--muted:#74768b;--line:#e8e9f3;--paper:#fff;--bg:#f6f7ff;--blue:#5755ed;--blue2:#7772ff;--cyan:#b6f4ee;--pink:#ffd5e8;--shadow:0 18px 55px rgba(45,45,95,.09);--radius:24px}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 5% 0%,#ededff 0,transparent 27rem),var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
+    button,input,textarea{font:inherit}button{cursor:pointer}a{color:inherit} .wrap{max-width:1180px;margin:0 auto;padding:22px 24px 64px}
+    .topbar{height:68px;display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:30px}.brand{display:flex;align-items:center;gap:11px;font-weight:850;font-size:25px;letter-spacing:-1px;text-decoration:none}.logo{width:42px;height:42px;border-radius:15px;background:var(--blue);display:grid;place-items:center;box-shadow:0 8px 18px #5b56ed36}.logo svg{width:26px;height:26px}.nav{display:flex;align-items:center;gap:8px}.nav button,.ghost{border:0;background:transparent;color:var(--muted);font-weight:700;padding:11px 14px;border-radius:13px}.nav button:hover,.ghost:hover{background:#ebebff;color:var(--blue)}.nav .pill{background:#fff;border:1px solid var(--line);color:var(--ink);box-shadow:0 4px 12px #20204f08}
+    .hero{display:grid;grid-template-columns:1.12fr .88fr;gap:34px;align-items:center;margin:12px 0 34px;padding:26px 10px 20px}.eyebrow{display:inline-flex;align-items:center;gap:8px;border:1px solid #e4e4fa;background:#fff;padding:8px 12px;border-radius:99px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:800;color:var(--blue)}.spark{width:7px;height:7px;background:#51cbb9;border-radius:50%;box-shadow:0 0 0 4px #51cbb91d}.hero h1{font-size:clamp(39px,5vw,66px);line-height:.99;letter-spacing:-.065em;margin:20px 0 18px;max-width:650px}.gradient{color:var(--blue)}.hero p{color:var(--muted);font-size:16px;line-height:1.7;max-width:530px;margin:0}.hero-actions{display:flex;gap:11px;flex-wrap:wrap;margin-top:25px}.primary,.secondary{border-radius:14px;border:0;padding:13px 18px;font-weight:800;transition:transform .15s,box-shadow .15s}.primary{background:var(--blue);color:#fff;box-shadow:0 8px 20px #5755ed30}.primary:hover{transform:translateY(-1px);box-shadow:0 12px 25px #5755ed40}.secondary{background:#fff;border:1px solid var(--line);color:var(--ink)}.secondary:hover{border-color:#c9c8ff;color:var(--blue)}
+    .hero-art{position:relative;min-height:300px;display:grid;place-items:center}.blob{position:absolute;width:270px;height:270px;background:linear-gradient(145deg,#d8d5ff,#bfedf0);border-radius:48% 52% 60% 40% / 49% 42% 58% 51%;transform:rotate(-12deg)}.float-card{position:absolute;z-index:1;background:#fff;border:1px solid #fff;border-radius:21px;padding:15px;box-shadow:0 18px 50px #403e801c;display:flex;align-items:center;gap:12px}.float-card.one{top:30px;left:7%;transform:rotate(-5deg)}.float-card.two{right:1%;top:115px;transform:rotate(4deg)}.float-card.three{left:14%;bottom:24px;transform:rotate(3deg)}.avatar{width:43px;height:43px;border-radius:15px;background:#ecebff;color:var(--blue);display:grid;place-items:center;font-size:17px;font-weight:900}.avatar.pink{background:#ffebf4;color:#bd4c85}.avatar.mint{background:#e0faf4;color:#178b80}.float-card b{font-size:14px;display:block}.float-card small{font-size:12px;color:var(--muted);display:block;margin-top:3px}.float-chip{font-size:11px;font-weight:800;padding:6px 8px;border-radius:8px;background:#f1f0ff;color:var(--blue)}.center-swoosh{position:relative;z-index:1;width:105px;height:105px;display:grid;place-items:center;border-radius:32px;background:var(--blue);box-shadow:0 22px 45px #5755ed49;transform:rotate(-8deg)}.center-swoosh svg{width:62px;height:62px}
+    .app-grid{display:grid;grid-template-columns:minmax(0,1.22fr) minmax(310px,.78fr);gap:20px;align-items:start}.panel{background:var(--paper);border:1px solid #e9e9f4;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}.panel-head{padding:22px 24px 17px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.panel h2{margin:0;font-size:21px;letter-spacing:-.04em}.sub{font-size:13px;color:var(--muted);line-height:1.55;margin:7px 0 0}.state-tag{font-size:11px;font-weight:800;padding:7px 10px;border-radius:99px;background:#effcf9;color:#218579;white-space:nowrap}.state-tag.offline{background:#f2f2f8;color:#85869b}.search-row{display:flex;gap:9px;padding:0 24px 22px}.search-wrap{position:relative;flex:1;min-width:0}.search-icon{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:#9999b2}.search-input{width:100%;height:49px;border:1px solid var(--line);background:#fafaff;border-radius:14px;padding:0 14px 0 44px;outline:none}.search-input:focus,.field input:focus,.field textarea:focus{border-color:#9b99ff;box-shadow:0 0 0 3px #7772ff20}.search-row .primary{padding:0 19px}.results{padding:0 24px 24px}.results-top{display:flex;align-items:center;justify-content:space-between;color:var(--muted);font-size:12px;font-weight:750;margin:0 0 12px}.results-list{display:grid;gap:11px}.profile-card{border:1px solid var(--line);border-radius:18px;padding:15px;display:grid;gap:12px;background:#fff}.profile-top{display:flex;align-items:center;gap:12px;min-width:0}.profile-avatar{width:48px;height:48px;flex:0 0 auto;border-radius:16px;display:grid;place-items:center;background:linear-gradient(145deg,#e3e1ff,#d5f6f0);color:var(--blue);font-size:18px;font-weight:900}.profile-name{min-width:0;flex:1}.profile-name strong{display:block;font-size:15px;overflow-wrap:anywhere}.handle{color:var(--muted);font-size:12px;margin-top:3px}.online-dot{width:8px;height:8px;border-radius:99px;background:#41c9b4;display:inline-block;margin-right:5px}.bio{color:#66687e;font-size:13px;line-height:1.55;margin:0}.socials{display:flex;gap:7px;flex-wrap:wrap}.social-link,.social-copy{display:inline-flex;align-items:center;gap:6px;text-decoration:none;border:1px solid #ececf8;background:#fafaff;color:#4f5067;padding:8px 10px;border-radius:10px;font-size:12px;font-weight:750}.social-link:hover,.social-copy:hover{background:#efefff;border-color:#d9d8ff;color:var(--blue)}.social-link .mini-icon{font-size:12px}.social-copy{cursor:pointer}.empty{padding:29px 15px;border:1px dashed #dcdced;background:#fcfcff;border-radius:17px;text-align:center}.empty .empty-icon{width:43px;height:43px;border-radius:14px;margin:0 auto 10px;background:#efefff;color:var(--blue);display:grid;place-items:center;font-size:20px}.empty strong{font-size:14px}.empty p{font-size:12px;color:var(--muted);line-height:1.6;margin:6px auto 0;max-width:300px}.hint{font-size:11px;line-height:1.55;color:#8a8ba0;padding:0 24px 19px}
+    .signup-panel .panel-head{padding-bottom:19px}.form-body{padding:0 24px 24px}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}.field{display:grid;gap:7px;min-width:0}.field.full{grid-column:1/-1}.field label{font-size:12px;font-weight:800;color:#55566c}.field input,.field textarea{width:100%;border:1px solid var(--line);background:#fafaff;padding:12px 13px;border-radius:12px;outline:none;color:var(--ink);font-size:13px}.field input{height:43px}.field textarea{resize:vertical;min-height:68px;line-height:1.5}.field input::placeholder,.field textarea::placeholder{color:#a6a6b8}.social-title{font-size:11px;letter-spacing:.09em;text-transform:uppercase;font-weight:850;color:#9091a7;margin:20px 0 11px}.create-row{display:flex;gap:10px;align-items:center;margin-top:18px}.create-row .primary{flex:1}.small-note{font-size:11px;color:#88899f;line-height:1.55;margin:12px 0 0}.callout{border:1px solid #e9e8ff;background:linear-gradient(115deg,#f7f6ff,#f4fffd);margin-top:18px;padding:14px;border-radius:15px;display:flex;gap:10px}.callout .info{width:26px;height:26px;border-radius:9px;background:#e6e4ff;color:var(--blue);font-weight:900;display:grid;place-items:center;flex:0 0 auto}.callout p{font-size:11px;color:#75758b;line-height:1.6;margin:0}.callout strong{color:#4e4c80}
+    .toast{position:fixed;bottom:22px;left:50%;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:#20213a;color:#fff;padding:12px 16px;border-radius:13px;font-size:13px;font-weight:700;box-shadow:0 8px 30px #20213a30;transition:.22s;z-index:5;max-width:calc(100vw - 32px)}.toast.show{opacity:1;transform:translate(-50%,0)}.footer{display:flex;justify-content:space-between;gap:20px;align-items:center;color:#898aa0;font-size:11px;margin-top:27px;padding:0 5px}.footer span:last-child{text-align:right}.modal-backdrop{position:fixed;inset:0;background:#24244455;display:none;place-items:center;padding:18px;z-index:10}.modal-backdrop.show{display:grid}.modal{background:#fff;border-radius:23px;box-shadow:0 25px 100px #25254545;max-width:430px;width:100%;padding:24px}.modal h3{margin:0 0 8px;font-size:21px}.modal p{font-size:13px;color:var(--muted);line-height:1.65}.modal-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:19px}.status-line{font-size:11px;color:var(--muted);margin-top:6px;min-height:16px}
+    @media(max-width:850px){.hero{grid-template-columns:1fr;gap:8px;padding-top:14px}.hero-art{min-height:270px;max-width:540px;width:100%;margin:0 auto}.app-grid{grid-template-columns:1fr}.signup-panel{order:2}.search-panel{order:1}.hero h1{max-width:620px}}
+    @media(max-width:540px){.wrap{padding:15px 13px 38px}.topbar{margin-bottom:13px;height:56px}.brand{font-size:22px}.logo{width:38px;height:38px}.nav button{padding:9px;font-size:12px}.nav .pill{display:none}.hero{padding:13px 3px 10px;margin-bottom:20px}.hero h1{font-size:44px}.hero p{font-size:14px}.hero-art{min-height:228px;transform:scale(.9);margin-top:-10px;margin-bottom:-12px}.blob{width:230px;height:230px}.float-card.one{left:1%;top:16px}.float-card.two{right:-2%;top:94px}.float-card.three{left:6%;bottom:10px}.panel-head{padding:19px 17px 15px}.search-row{padding:0 17px 17px}.results{padding:0 17px 19px}.hint{padding:0 17px 16px}.form-body{padding:0 17px 20px}.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.footer{align-items:flex-start;flex-direction:column;gap:8px}.footer span:last-child{text-align:left}.search-row{gap:7px}.search-row .primary{padding:0 13px;font-size:12px}.search-input{font-size:13px}}
+  </style>
 </head>
 <body>
-<!-- Loading screen -->
-<div id="loading-screen">
-  <div class="loading-spinner"></div>
-  <div class="loading-text">UB-Pro OS Loading...</div>
-</div>
-<!-- END loading -->
+  <div class="wrap">
+    <header class="topbar">
+      <a href="#top" class="brand" aria-label="Flapper home">
+        <span class="logo"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M5 9.2c5.1-.6 9.4 1.2 11 5.4 1.6-4.2 5.9-6 11-5.4-1.3 7.8-5.3 12-11 13.2C10.3 21.2 6.3 17 5 9.2Z" stroke="white" stroke-width="2.2" stroke-linejoin="round"/><path d="M16 14.5v11" stroke="white" stroke-width="2.2" stroke-linecap="round"/></svg></span>
+        flapper
+      </a>
+      <nav class="nav"><button type="button" id="navSearch">Search people</button><button type="button" id="navProfile" class="pill">Create profile ↗</button></nav>
+    </header>
 
-<button id="corner-ad-btn" onclick="forceAd()">ad</button>
+    <main id="top">
+      <section class="hero" aria-label="Introduction">
+        <div>
+          <span class="eyebrow"><span class="spark"></span> your people, in one place</span>
+          <h1>More ways to connect.<br><span class="gradient">More room to be you.</span></h1>
+          <p>One username. All your socials. Find someone's Flapper name and keep the links they want to share in one place.</p>
+          <div class="hero-actions"><button class="primary" type="button" id="heroSearch">Find someone <span aria-hidden="true">↗</span></button><button class="secondary" type="button" id="heroCreate">Make your profile</button></div>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <div class="blob"></div>
+          <div class="float-card one"><div class="avatar">M</div><div><b>milo.wav</b><small>Gaming · music</small></div><span class="float-chip">@milo.wav</span></div>
+          <div class="float-card two"><div class="avatar pink">J</div><div><b>jules.jpg</b><small>Instagram · TikTok</small></div></div>
+          <div class="float-card three"><div class="avatar mint">A</div><div><b>ava.exe</b><small>One link away</small></div><span class="float-chip">4 socials</span></div>
+          <div class="center-swoosh"><svg viewBox="0 0 80 80" fill="none"><path d="M11 22c15-2 26 4 29 17 3-13 14-19 29-17-4 23-15 35-29 38C26 57 15 45 11 22Z" stroke="white" stroke-width="4.5" stroke-linejoin="round"/><path d="M40 39v30" stroke="white" stroke-width="4.5" stroke-linecap="round"/></svg></div>
+        </div>
+      </section>
 
-<div id="popup-ad">
-  <span class="popup-close" onclick="closeAd()">×</span>
-  <a href="https://www.youtube.com/@kingoftheduck875" target="_blank" class="flex flex-col items-center no-underline cursor-pointer">
-    <h2 class="text-2xl font-black mb-4 uppercase text-black">subscribe to kingoftheduck</h2>
-    <img src="https://yt3.googleusercontent.com/LbtyvPoOcAmYg5eyEvkP04Wgtovn61ZJA79gblM6AN3a8NFT6BNOs8B3c-xi4HCNyZXVqn6y=s160-c-k-c0x00ffffff-no-rj" class="w-32 h-32 rounded-full border-4 border-green-500 shadow-xl" />
-  </a>
-</div>
+      <section class="app-grid">
+        <section class="panel search-panel" id="searchPanel">
+          <div class="panel-head">
+            <div><h2>Find your people</h2><p class="sub">Search by their exact Flapper username.</p></div>
+            <span id="peerState" class="state-tag offline">P2P not connected</span>
+          </div>
+          <form class="search-row" id="searchForm">
+            <div class="search-wrap"><span class="search-icon" aria-hidden="true">⌕</span><input id="searchInput" class="search-input" type="search" autocomplete="off" maxlength="24" placeholder="Try a username, like milo.wav" aria-label="Search username" /></div>
+            <button class="primary" type="submit">Search</button>
+          </form>
+          <div class="results">
+            <div class="results-top"><span id="resultsLabel">YOUR DIRECTORY</span><span id="resultsCount">0 profiles</span></div>
+            <div id="resultsList" class="results-list">
+              <div class="empty"><div class="empty-icon">⌕</div><strong>Search a username</strong><p>Profiles saved on this browser show up here. When someone's online, Flapper can request their public profile over a direct peer connection.</p></div>
+            </div>
+          </div>
+          <div class="hint">P2P lookups only work while the other person has Flapper open and online. WebRTC uses a small signaling service to find the peer, then sends profile data directly between browsers.</div>
+        </section>
 
-<!-- Wallpaper options modal -->
-<div id="wallpaper-options" class="modal">
-  <span class="settings-modal-close" onclick="closeWallpaperOptions()">×</span>
-  <h3>Change Wallpaper</h3>
-  <div class="wallpaper-item" onclick="changeWallpaper('default-gradient')" data-wallpaper="default-gradient">Default Gradient</div>
-  <div class="wallpaper-item" onclick="changeWallpaper('solid-blue')" data-wallpaper="solid-blue">Solid Blue</div>
-  <div class="wallpaper-item" onclick="changeWallpaper('dark-matter')" data-wallpaper="dark-matter">Dark Matter</div>
-  <div class="wallpaper-item active" onclick="changeWallpaper('purple-pink-gradient')" data-wallpaper="purple-pink-gradient">Purple/Pink Gradient</div>
-  <button onclick="closeWallpaperOptions()" class="wp-option mt-6">Close</button>
-</div>
-
-<!-- login modal -->
-<div id="loginModal" class="modal">
-  <span class="settings-modal-close" onclick="document.getElementById('loginModal').style.display='none'; setActiveSidebarIcon('home')">×</span>
-  <h3>Login</h3>
-  <input type="text" id="loginUsername" placeholder="Username" class="bg-[#282828] border border-[#444] text-white p-3 rounded-lg mb-3" />
-  <input type="password" id="loginPassword" placeholder="Password" class="bg-[#282828] border border-[#444] text-white p-3 rounded-lg mb-4" />
-  <button onclick="login()" class="wp-option">Login</button>
-  <button onclick="logout()" class="wp-option mt-2 text-red-500 border-red-500 hover:bg-red-500 hover:text-black">Logout</button>
-</div>
-
-<div id="os-workspace">
-  <!-- TOP LEFT SIDEBAR -->
-  <div class="horizontal-sidebar">
-    <i class="fa-solid fa-magnifying-glass sidebar-search-icon" title="Search Apps"></i>
-    <div class="sidebar-icons">
-      <i id="btn-home-sidebar" class="fa-solid fa-house sidebar-icon active" title="Home" onclick="nav('home'); setActiveSidebarIcon('home')"></i>
-      <i id="btn-pro-browser-sidebar" class="fa-solid fa-globe sidebar-icon" title="Browser" onclick="nav('pro-browser'); setActiveSidebarIcon('pro-browser')"></i>
-      <i id="btn-games-sidebar" class="fa-solid fa-gamepad sidebar-icon text-cyan-400" title="Games" onclick="nav('games'); setActiveSidebarIcon('games')"></i>
-      <i id="btn-coderunner-sidebar" class="fa-solid fa-code sidebar-icon text-orange-500" title="Code Runner" onclick="nav('coderunner'); setActiveSidebarIcon('coderunner')"></i>
-      <i id="btn-passes-sidebar" class="fa-solid fa-ticket sidebar-icon text-purple-500" title="Passes" onclick="nav('passes'); setActiveSidebarIcon('passes')"></i>
-      <!-- Board icon removed -->
-      <i id="btn-chat-sidebar" class="fa-solid fa-comments sidebar-icon text-blue-400" title="Global Chat" onclick="nav('chat'); setActiveSidebarIcon('chat')"></i>
-      <!-- Relaun icon changed to "RL" -->
-      <div id="btn-relaun-sidebar" class="sidebar-icon text-red-500 font-bold" title="Relaun" onclick="nav('relaun'); setActiveSidebarIcon('relaun')">RL</div>
-      <i id="btn-settings-sidebar" class="fa-solid fa-gear sidebar-icon" title="Settings" onclick="nav('settings'); setActiveSidebarIcon('settings')"></i>
-    </div>
+        <section class="panel signup-panel" id="profilePanel">
+          <div class="panel-head">
+            <div><h2 id="formTitle">Make your profile</h2><p class="sub" id="formSub">Claim a username and add the socials you want people to find.</p></div>
+            <span class="state-tag offline" id="profileTag">Not signed up</span>
+          </div>
+          <form class="form-body" id="profileForm">
+            <div class="form-grid">
+              <div class="field"><label for="username">Flapper username *</label><input id="username" name="username" autocomplete="username" maxlength="24" placeholder="e.g. milo_wave" required pattern="[A-Za-z0-9][A-Za-z0-9_-]{1,22}[A-Za-z0-9]" title="Use 3–24 letters, numbers, underscores, or hyphens. Start and end with a letter or number." /></div>
+              <div class="field"><label for="displayName">Display name *</label><input id="displayName" name="displayName" maxlength="40" placeholder="What people call you" required /></div>
+              <div class="field full"><label for="bio">Bio</label><textarea id="bio" name="bio" maxlength="180" placeholder="A little about you (optional)"></textarea></div>
+            </div>
+            <div class="social-title">Your socials</div>
+            <div class="form-grid">
+              <div class="field"><label for="youtube">YouTube</label><input id="youtube" name="youtube" maxlength="180" placeholder="@handle or profile URL" /></div>
+              <div class="field"><label for="tiktok">TikTok</label><input id="tiktok" name="tiktok" maxlength="180" placeholder="@handle or profile URL" /></div>
+              <div class="field"><label for="instagram">Instagram</label><input id="instagram" name="instagram" maxlength="180" placeholder="@handle or profile URL" /></div>
+              <div class="field"><label for="discord">Discord</label><input id="discord" name="discord" maxlength="180" placeholder="username or invite URL" /></div>
+            </div>
+            <div class="create-row"><button class="primary" type="submit" id="saveProfile">Claim username</button><button class="secondary" type="button" id="clearForm">Clear</button></div>
+            <div class="status-line" id="formStatus" aria-live="polite"></div>
+            <p class="small-note">A username is reserved by the peer service while you're online. Permanent reservations and secure accounts require a hosted database and authentication; this standalone demo stores profiles on this browser.</p>
+            <div class="callout"><div class="info">i</div><p><strong>No giant connection code.</strong> Search with a username. PeerJS handles WebRTC signaling. The other person needs to be online, and the peer service only enforces live username conflicts—not permanent ownership.</p></div>
+          </form>
+        </section>
+      </section>
+      <footer class="footer"><span>© Flapper · a social directory prototype</span><span>Only share socials you want people to see. Never post passwords or private info.</span></footer>
+    </main>
   </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal"><h3 id="modalTitle">About Flapper</h3><p id="modalText"></p><div class="modal-actions"><button class="primary" type="button" id="modalClose">Got it</button></div></div></div>
 
-  <main class="flex-1 relative overflow-hidden">
-    <div class="relative z-10 w-full h-full">
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <script>
+    (() => {
+      'use strict';
+      const STORE_KEY = 'flapper_profiles_v1';
+      const CURRENT_KEY = 'flapper_current_username_v1';
+      const $ = (id) => document.getElementById(id);
+      const form = $('profileForm');
+      const searchForm = $('searchForm');
+      let activePeer = null;
+      let currentProfile = null;
+      let currentPeerReady = false;
+      let toastTimer = null;
+      let peerBootToken = 0;
 
-      <!-- HOME -->
-      <section id="home" class="absolute inset-0 flex flex-col items-center justify-center transition-opacity duration-500">
-        <div class="home-status-bar">
-          <span id="home-clock">--:--:--</span>
-          <div id="battery-icon">
-            <i class="fa-solid fa-battery-full"></i>
-            <span id="battery-percentage">100%</span>
-          </div>
-        </div>
-        <div id="home-title">
-          <img src="https://ssl.gstatic.com/classroom/favicon.png" class="w-20 h-20 mx-auto mb-4 drop-shadow-[0_0_20px_rgba(34,197,94,0.4)]" />
-          <h1 class="text-6xl font-black text-white tracking-tighter">UB-Pro</h1>
-          <div class="mt-6 text-xl font-mono text-accent-green bg-black/40 px-6 py-2 rounded-lg border border-white/5 inline-block">
-            <span id="typewriter"></span><span class="cursor">|</span>
-          </div>
-        </div>
-        <!-- Profile Section -->
-        <div id="profile-section" class="absolute top-[75px] right-[15px] flex items-center space-x-3 cursor-pointer" onclick="openProfileModal()">
-          <div class="profile-avatar">
-            <img id="profile-header-avatar" src="https://via.placeholder.com/100" alt="Profile Avatar" class="hidden w-full h-full rounded-full object-cover">
-            <i id="profile-header-icon" class="fa-solid fa-user"></i> <!-- Placeholder icon -->
-          </div>
-          <span id="profile-name" class="font-semibold text-white">Guest</span>
-          <i class="fa-solid fa-chevron-down ml-1 text-xs text-white/70"></i>
-        </div>
-      </section>
-
-      <!-- PRO-BROWSER -->
-      <section id="pro-browser" class="absolute inset-0 hidden">
-        <div class="pro-browser-container">
-          <h1>PRO-BROWSER</h1>
-
-          <div class="pro-browser-search-bar-container">
-              <!-- The search bar input -->
-              <input type="text" class="pro-browser-search-bar" id="urlInput" placeholder="Enter URL or search...">
-          </div>
-
-          <div class="pro-browser-shortcuts">
-              <!-- Example Shortcuts -->
-              <a href="#" class="pro-browser-shortcut-link" data-url="https://www.google.com">Google</a>
-              <a href="#" class="pro-browser-shortcut-link" data-url="https://www.youtube.com">YouTube</a>
-              <a href="#" class="pro-browser-shortcut-link" data-url="https://www.github.com">GitHub</a>
-              <a href="#" class="pro-browser-shortcut-link" data-url="https://www.wikipedia.org">Wikipedia</a>
-          </div>
-        </div>
-      </section>
-
-      <!-- GAMES -->
-      <section id="games" class="absolute inset-0 hidden">
-        <div class="games-section-wrapper">
-          <h2>Games</h2>
-          <div id="games-grid" class="grid gap-4 grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">
-            <!-- Game Card 1: Modern Wars (now a link) -->
-            <div class="game-card cursor-pointer" onclick="launchGameBlank('https://websim.com/@man_82/modern-wars')">
-              <h3>Modern Wars</h3>
-              <div class="game-placeholder">Click to Play</div>
-            </div>
-            <!-- Placeholder for more games -->
-            <div class="game-card cursor-pointer" onclick="alert('More games coming soon!')">
-              <h3>Coming Soon</h3>
-              <div class="game-placeholder">Stay tuned!</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Coderunner -->
-      <section id="coderunner" class="absolute inset-0 hidden">
-        <div class="coderunner-section-wrapper">
-          <h2 class="text-3xl font-bold text-white mb-6"><i class="fa-solid fa-code mr-3 text-orange-500"></i>HTML Runner</h2>
-          <textarea id="code-editor" placeholder="Paste your HTML/CSS/JS here..." class="w-full h-64 bg-[#1e1e1e] text-white p-3 rounded-lg border border-[#444] resize-none"></textarea>
-          <button onclick="runCode()" class="px-6 py-2 bg-green-600 mt-4 text-white font-bold rounded-lg transition hover:bg-green-700">Run Code</button>
-          <iframe id="code-preview" class="w-full h-80 mt-4 bg-white"></iframe>
-        </div>
-      </section>
-
-      <!-- Passes -->
-      <section id="passes" class="absolute inset-0 hidden">
-        <div class="passes-section-wrapper">
-          <div class="flex justify-between items-center mb-8 w-full max-w-6xl">
-            <h2 class="text-4xl font-bold text-white"><i class="fa-solid fa-ticket mr-3 text-purple-500"></i>Passes & More</h2>
-            <div class="text-2xl font-bold text-accent-green bg-black/50 px-4 py-2 rounded-xl border border-accent-green/30">
-              Time Balance: <span id="timeBalanceDisplay">0.0</span> Hours
-            </div>
-          </div>
-          <div id="passes-grid" class="grid gap-4 grid-cols-[repeat(auto-fit,minmax(250px,1fr))]">
-            <!-- Pass cards will be dynamically generated here -->
-          </div>
-        </div>
-      </section>
-
-      <!-- PADLET -->
-      <section id="padlet" class="absolute inset-0 hidden">
-        <div class="iframe-section-wrapper">
-          <iframe src="https://padlet.com/mmlolmm/us-students-are-smart-nfl6gbpowkd6wk0o"></iframe>
-        </div>
-      </section>
-
-      <!-- CHAT -->
-      <section id="chat" class="absolute inset-0 hidden">
-        <div class="iframe-section-wrapper">
-          <iframe src="https://padlet.com/mmlolmm/classroom-ub-v7k9fpn3985b2nw2"></iframe>
-        </div>
-      </section>
-
-      <!-- RELAUN (scratch embed) -->
-      <section id="relaun" class="absolute inset-0 hidden">
-        <div class="relaun-section-wrapper">
-          <iframe src="https://scratch.mit.edu/projects/1305586313/embed" allowfullscreen id="relaunFrame"></iframe>
-        </div>
-      </section>
-
-      <!-- SETTINGS -->
-      <section id="settings" class="absolute inset-0 hidden">
-        <div class="settings-section-wrapper">
-          <div class="settings-card">
-            <span class="settings-modal-close" onclick="nav('home'); setActiveSidebarIcon('home')">×</span>
-            <h2>Settings</h2>
-            <div class="setting-item">
-              <span class="setting-label">Master Volume</span>
-              <div class="setting-control">
-                <input type="range" id="os-master-volume" min="0" max="200" value="100" />
-                <span id="volume-readout">100%</span>
-              </div>
-            </div>
-            <div class="setting-item">
-              <span class="setting-label">Wallpaper</span>
-              <button class="wp-option" onclick="openWallpaperOptions()">Change</button>
-            </div>
-            <div class="setting-item">
-              <span class="setting-label">Launch in about:blank</span>
-              <button class="wp-option" onclick="launchAboutBlank()">🀀</button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-    </div>
-  </main>
-</div>
-
-<!-- MODALS -->
-<div id="browserServerModal" class="modal">
-  <span class="settings-modal-close" onclick="document.getElementById('browserServerModal').style.display='none'">×</span>
-  <h3>Browser Servers</h3>
-  <div class="max-h-64 overflow-y-auto pr-2">
-    <button class="wp-option" onclick="setBrowserServer('https://educationate.s3.us-east-1.amazonaws.com/index.html#/')">🌐 Default</button>
-    <button class="wp-option" onclick="setBrowserServer('https://mentalhealthonline.b-cdn.net/')">🌌 Void</button>
-    <button class="wp-option" onclick="setBrowserServer('https://55gms.skysthelimit.dev.cdn.cloudflare.net/')">🔴 Reds Corner</button>
-    <button class="wp-option" onclick="setBrowserServer('https://cdn.jsdelivr.net/gh/NightProxy/DD-Static/dist/index.svg')">☁️ DayDream X</button>
-    <button class="wp-option" onclick="setBrowserServer('https://learn-math.sylu.net.cdn.cloudflare.net/')">🐕 Doge 4</button>
-    <button class="wp-option" onclick="setBrowserServer('https://eeeeeee.is-a.software.cdn.cloudflare.net/')">🐕 Doge 5</button>
-    <button class="wp-option" onclick="setBrowserServer('https://iboss-api.sylu.net.cdn.cloudflare.net/')">🐕 Doge 6</button>
-    <button class="wp-option" onclick="setBrowserServer('https://lcnmxxw5.beanweb.qzz.io.cdn.cloudflare.net/')">⚡ overcloaked</button>
-    <button class="wp-option" onclick="setBrowserServer('https://educationate.s3.us-east-1.amazonaws.com/index.html#/search')">🐕 Doge 2</button>
-    <button class="wp-option" onclick="setBrowserServer('https://download.brightpathlearning.website/')">🌊 Waves</button>
-    <button class="wp-option" onclick="setBrowserServer('https://mathtutors4school.firebaseapp.com/index.html')">👻 Soul</button>
-  </div>
-  <button onclick="document.getElementById('browserServerModal').style.display='none'" class="wp-option mt-6">CANCEL</button>
-</div>
-
-<!-- Profile Settings Modal -->
-<div id="profileModal" class="modal">
-  <span class="settings-modal-close" onclick="closeProfileModal()">×</span>
-  <h3>Profile Settings</h3>
-  <div class="flex flex-col items-center space-y-4 w-full">
-    <div class="relative">
-      <img id="profile-modal-avatar" src="https://via.placeholder.com/100" alt="Profile Avatar" class="w-24 h-24 rounded-full border-4 border-accent-green object-cover">
-      <label for="profile-avatar-input" class="absolute bottom-0 right-0 bg-accent-green p-2 rounded-full cursor-pointer text-black hover:bg-green-600">
-        <i class="fas fa-camera"></i>
-      </label>
-      <input type="file" id="profile-avatar-input" accept="image/*" class="hidden" onchange="uploadProfilePicture(event)">
-    </div>
-    <div class="w-full">
-      <label for="profile-username" class="block mb-1 text-sm font-mono">Username</label>
-      <input type="text" id="profile-username" class="bg-[#282828] border border-[#444] text-white p-3 rounded-lg w-full" />
-    </div>
-    <div class="w-full">
-      <label for="profile-password" class="block mb-1 text-sm font-mono">New Password</label>
-      <input type="password" id="profile-password" class="bg-[#282828] border border-[#444] text-white p-3 rounded-lg w-full" />
-    </div>
-    <button onclick="saveProfileChanges()" class="wp-option mt-4">Save Changes</button>
-    <button onclick="logout()" class="wp-option mt-2 text-red-500 border-red-500 hover:bg-red-500 hover:text-black">Logout</button>
-  </div>
-</div>
-
-<script>
-// --- LOADING SCREEN LOGIC ---
-const loadingScreen = document.getElementById('loading-screen');
-
-function hideLoadingScreen() {
-    if (loadingScreen) {
-        loadingScreen.classList.add('hidden');
-    }
-}
-
-// --- CORE OS LOGIC ---
-// This is the default URL for the PRO-BROWSER, can be changed via settings or modal
-let currentBrowserUrl = 'https://educationate.s3.us-east-1.amazonaws.com/index.html#/';
-
-// User accounts (in a real app, this would be a backend database)
-// For simplicity, we'll use a hardcoded object and localStorage for logged-in user and balance.
-const accounts = {
-    "Kyphr": { password: "Iamanowner123", balance: 32983948483902, avatar: 'https://via.placeholder.com/100' },
-    // Add more users as needed
-};
-
-let loggedInUser = localStorage.getItem('loggedInUser') || null;
-// Initialize timeBalanceHours from localStorage if available, otherwise 0
-let timeBalanceHours = parseFloat(localStorage.getItem('timeBalance')) || 0;
-// Initialize adFreeUntil from localStorage, default to 0 (meaning ads are active)
-let adFreeUntil = parseInt(localStorage.getItem('adFreeUntil')) || 0;
-
-// --- NAVIGATION LOGIC ---
-function nav(id) {
-    // Updated sections array to include 'pro-browser'
-    const sections = ['home', 'pro-browser', 'games', 'coderunner', 'passes', 'padlet', 'chat', 'relaun', 'settings'];
-    sections.forEach(v => {
-        const el = document.getElementById(v);
-        if (el) el.classList.add('hidden');
-    });
-    document.querySelectorAll('.sidebar-icon').forEach(i => i.classList.remove('active'));
-
-    const target = document.getElementById(id);
-    if (target) target.classList.remove('hidden');
-
-    // Update sidebar icon based on the ID
-    const btn = document.getElementById('btn-' + id + '-sidebar');
-    if (btn) btn.classList.add('active');
-}
-
-// Function to set the active icon in the horizontal sidebar
-function setActiveSidebarIcon(id) {
-    document.querySelectorAll('.sidebar-icon').forEach(i => i.classList.remove('active'));
-    const btn = document.getElementById('btn-' + id + '-sidebar');
-    if (btn) btn.classList.add('active');
-}
-
-// --- TYPEWRITER EFFECT ---
-const typewriterElement = document.getElementById('typewriter');
-const textToType = "Welcome to UB-Pro OS!";
-let typeIdx = 0;
-function typeWriter() {
-    if (typeIdx < textToType.length) {
-        typewriterElement.innerHTML += textToType.charAt(typeIdx);
-        typeIdx++;
-        setTimeout(typeWriter, 100);
-    }
-}
-
-// --- STATUS BAR (Clock & Battery) ---
-const homeClockElement = document.getElementById('home-clock');
-const batteryIconElement = document.querySelector('#battery-icon i');
-const batteryPercentageElement = document.getElementById('battery-percentage');
-
-let battery = null;
-// Check for Battery API support
-if (navigator.getBattery) {
-    navigator.getBattery().then(bat => {
-        battery = bat;
-        updateBatteryDisplay();
-        // Add event listeners for battery changes
-        battery.addEventListener('levelchange', updateBatteryDisplay);
-        battery.addEventListener('chargingchange', updateBatteryDisplay);
-    }).catch(error => {
-        console.error("Error getting battery information:", error);
-        // Fallback if getBattery fails
-        fallbackBatteryDisplay();
-    });
-} else {
-    // Fallback if Battery API is not supported
-    console.warn("Battery Status API not supported. Using fallback.");
-    fallbackBatteryDisplay();
-}
-
-// Function to update battery display (real data or fallback)
-function updateBatteryDisplay() {
-    let level = 100; // Default to 100%
-    if (battery) {
-        level = Math.round(battery.level * 100);
-    } else {
-        // If battery object is not available, use fallback logic
-        level = 100; // Static 100% or use simulation if preferred
-    }
-
-    // Update percentage text
-    batteryPercentageElement.textContent = `${level}%`;
-
-    // Update icon based on level
-    batteryIconElement.className = ""; // Clear previous classes
-    if (level >= 80) {
-        batteryIconElement.classList.add('fa-solid', 'fa-battery-full');
-    } else if (level >= 50) {
-        batteryIconElement.classList.add('fa-solid', 'fa-battery-half');
-    } else if (level >= 20) {
-        batteryIconElement.classList.add('fa-solid', 'fa-battery-quarter');
-    } else {
-        batteryIconElement.classList.add('fa-solid', 'fa-battery-empty');
-    }
-
-    // Update color based on level
-    batteryIconElement.classList.remove('battery-low', 'battery-medium', 'battery-full');
-    if (level < 20) {
-        batteryIconElement.classList.add('battery-low');
-    } else if (level < 60) {
-        batteryIconElement.classList.add('battery-medium');
-    } else {
-        batteryIconElement.classList.add('battery-full');
-    }
-}
-
-// Fallback function for when Battery API is not available or fails
-function fallbackBatteryDisplay() {
-    console.log("Using fallback battery display.");
-    // You can implement a simulated drain here if you wish
-    // For now, it will just stay at 100% or whatever the last value was
-    // If you want a simulated drain:
-    /*
-    let simulatedBatteryLevel = 100;
-    setInterval(() => {
-        simulatedBatteryLevel -= 0.1; // Drain 0.1% per second
-        if (simulatedBatteryLevel < 0) simulatedBatteryLevel = 0;
-        batteryPercentageElement.textContent = `${Math.round(simulatedBatteryLevel)}%`;
-        // Update icon/color logic here as well if simulating drain
-    }, 1000);
-    */
-}
-
-// Function to update the clock
-function updateStatusBar() {
-    const now = new Date();
-    const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    homeClockElement.textContent = timeString;
-    updateBatteryDisplay(); // Update battery status as well
-}
-setInterval(updateStatusBar, 1000); // Update clock every second
-
-// --- AD LOGIC ---
-function closeAd() { document.getElementById('popup-ad').classList.remove('show'); }
-function forceAd() { document.getElementById('popup-ad').classList.add('show'); }
-
-function showAd() {
-    // Check if ad-free period is active and expired, or if user is not logged in and ad-free is not active
-    if (Date.now() < adFreeUntil) {
-        // Ad-free is active, do nothing
-        return;
-    }
-    if (!document.getElementById('popup-ad').classList.contains('show')) {
-        document.getElementById('popup-ad').classList.add('show');
-    }
-}
-setInterval(showAd, 180000); // Show ad every 3 minutes
-// Show ad after a small delay on initial load if not ad-free
-if (Date.now() >= adFreeUntil) {
-    setTimeout(showAd, 5000);
-}
-
-
-// --- LAUNCHER UTILITY ---
-function launchGameBlank(url) {
-    const win = window.open('about:blank', '_blank');
-    if (win) {
-        win.document.body.style.margin = '0';
-        const iframe = win.document.createElement('iframe');
-        iframe.style.width = '100%';
-        iframe.style.height = '100vh';
-        iframe.style.border = 'none';
-        iframe.src = url;
-        win.document.body.appendChild(iframe);
-    } else {
-        alert("Please allow pop-ups for this site to open new windows.");
-    }
-}
-
-// --- SETTINGS FUNCTIONS ---
-const osMasterVolume = document.getElementById('os-master-volume');
-const volumeReadout = document.getElementById('volume-readout');
-const wallpaperOptionsModal = document.getElementById('wallpaper-options');
-const wallpaperItems = document.querySelectorAll('.wallpaper-item');
-let currentWallpaper = localStorage.getItem('currentWallpaper') || 'purple-pink-gradient'; // Set default to purple-pink
-
-function updateVolumeDisplay() {
-    const volume = parseInt(osMasterVolume.value);
-    volumeReadout.textContent = `${volume}%`;
-}
-osMasterVolume.addEventListener('input', updateVolumeDisplay);
-
-function openWallpaperOptions() {
-    wallpaperOptionsModal.style.display = 'flex';
-    wallpaperItems.forEach(item => {
-        item.classList.toggle('active', item.getAttribute('data-wallpaper') === currentWallpaper);
-    });
-}
-function closeWallpaperOptions() {
-    wallpaperOptionsModal.style.display = 'none';
-}
-
-function changeWallpaper(type) {
-    const body = document.body;
-    body.style.background = '';
-    body.style.backgroundImage = '';
-    body.style.backgroundColor = '';
-    body.style.backgroundAttachment = 'fixed';
-
-    switch (type) {
-        case 'default-gradient': // This is now the purple and pink one
-            body.style.background = 'linear-gradient(135deg, #8a2be2 0%, #ff69b4 100%)';
-            break;
-        case 'solid-blue':
-            body.style.backgroundColor = '#000080'; // Navy blue
-            break;
-        case 'dark-matter':
-            body.style.backgroundImage = "url('https://wallpaperaccess.com/full/156750.jpg')";
-            body.style.backgroundSize = 'cover';
-            body.style.backgroundPosition = 'center';
-            break;
-        case 'purple-pink-gradient': // This will now be the second option
-            body.style.background = 'linear-gradient(135deg, #6a0dad 0%, #ff1493 100%)'; // Deep Purple to Deep Pink
-            break;
-        default: // Fallback to original
-            body.style.backgroundImage = "url('https://wallpapercat.com/w/full/6/4/d/190477-3840x2160-desktop-4k-galaxy-wallpaper.jpg')";
-            body.style.backgroundSize = 'cover';
-            body.style.backgroundPosition = 'center';
-    }
-    currentWallpaper = type;
-    localStorage.setItem('currentWallpaper', currentWallpaper);
-    closeWallpaperOptions();
-    wallpaperItems.forEach(item => {
-        item.classList.toggle('active', item.getAttribute('data-wallpaper') === type);
-    });
-}
-
-function launchAboutBlank() {
-    launchGameBlank('about:blank');
-}
-
-// --- PRO-BROWSER APP LOGIC ---
-const urlInput = document.getElementById('urlInput');
-const shortcutLinks = document.querySelectorAll('.pro-browser-shortcut-link');
-// IMPORTANT: Replace 'https://demo.webfuse.com/+iframetest/?url=' with your actual proxy/iframe service URL
-const redirectServiceBase = 'https://demo.webfuse.com/+iframetest/?url='; // Placeholder for your proxy service
-
-function performRedirect(url) {
-    // Basic URL validation/cleaning
-    if (!url.startsWith('http://') && !url.startsWith('https://')) {
-        url = 'https://' + url; // Default to https if no protocol
-    }
-
-    // Construct the final redirect URL.
-    const encodedUrl = encodeURIComponent(url);
-    const finalRedirectUrl = redirectServiceBase + encodedUrl;
-
-    // Redirect the entire window
-    window.location.href = finalRedirectUrl;
-    console.log("Redirecting to:", finalRedirectUrl); // For debugging
-}
-
-// Event listener for the search bar input
-urlInput.addEventListener('keypress', function(event) {
-    if (event.key === 'Enter') {
-        const enteredUrl = urlInput.value.trim();
-        if (enteredUrl) {
-            performRedirect(enteredUrl);
+      function readProfiles() {
+        try { const value = JSON.parse(localStorage.getItem(STORE_KEY) || '{}'); return value && typeof value === 'object' ? value : {}; }
+        catch (_) { return {}; }
+      }
+      function writeProfiles(profiles) {
+        try { localStorage.setItem(STORE_KEY, JSON.stringify(profiles)); return true; }
+        catch (_) { toast('Could not save to this browser. Storage may be blocked.'); return false; }
+      }
+      function cleanUsername(value) { return String(value || '').trim().replace(/^@+/, '').toLowerCase(); }
+      function validUsername(value) { return /^[a-z0-9][a-z0-9_-]{1,22}[a-z0-9]$/.test(value); }
+      function toast(message) {
+        const node = $('toast'); node.textContent = message; node.classList.add('show');
+        clearTimeout(toastTimer); toastTimer = setTimeout(() => node.classList.remove('show'), 3300);
+      }
+      function setPeerState(label, online) {
+        const tag = $('peerState'); tag.textContent = label; tag.classList.toggle('offline', !online);
+      }
+      function setFormStatus(message) { $('formStatus').textContent = message || ''; }
+      function safeExternalURL(value) {
+        try { const u = new URL(value); if (u.protocol === 'https:' || u.protocol === 'http:') return u.href; }
+        catch (_) {} return '';
+      }
+      function normalizeSocial(kind, raw) {
+        let value = String(raw || '').trim();
+        if (!value) return null;
+        if (value.length > 180) throw new Error(kind + ' link is too long.');
+        if (/^(javascript|data|vbscript):/i.test(value)) throw new Error('Use a normal profile URL or username.');
+        if (/^https?:\/\//i.test(value)) {
+          const url = safeExternalURL(value);
+          if (!url) throw new Error('That ' + kind + ' URL is not valid.');
+          return {kind, value, url};
         }
-    }
-});
-
-// Event listeners for the shortcut links
-shortcutLinks.forEach(link => {
-    link.addEventListener('click', function(event) {
-        event.preventDefault(); // Prevent default link behavior
-        const urlToLoad = this.getAttribute('data-url');
-        performRedirect(urlToLoad);
-        urlInput.value = urlToLoad; // Optionally update the search bar
-    });
-});
-
-// --- CODERUNNER LOGIC ---
-const codeEditor = document.getElementById('code-editor');
-const codePreview = document.getElementById('code-preview');
-function runCode() {
-    const code = codeEditor.value;
-    const iframeDocument = codePreview.contentWindow.document;
-    iframeDocument.open();
-    iframeDocument.write(code);
-    iframeDocument.close();
-
-    // Apply purple-pink wallpaper after code runs
-    changeWallpaper('purple-pink-gradient');
-}
-
-// --- PASSES SECTION LOGIC ---
-const passesGrid = document.getElementById('passes-grid');
-const timeBalanceDisplay = document.getElementById('timeBalanceDisplay');
-
-// Define available passes with their properties
-const availablePasses = [
-    { name: "Premium Wallpaper Pass", description: "Unlock exclusive OS wallpapers.", price: 0.5, id: "wallpaper-pass", effect: "unlockWallpaper" },
-    { name: "Ad-Free Pass (24h)", description: "Enjoy 24 hours without ads.", price: 1.0, id: "ad-free-24h", effect: "adFree24h" },
-    { name: "No Ads Pass (7 Days)", description: "Enjoy 7 days without ads.", price: 2.5, id: "ad-free-7d", effect: "adFree7d" },
-    { name: "Custom Accent Pass", description: "Choose a custom accent color for your OS.", price: 1.5, id: "custom-accent", effect: "customAccent" },
-];
-
-// Function to update the display of time balance and pass cards
-function updatePassesDisplay() {
-    // Ensure timeBalanceHours is always a number
-    timeBalanceHours = parseFloat(timeBalanceHours) || 0;
-    timeBalanceDisplay.textContent = timeBalanceHours.toFixed(1);
-    passesGrid.innerHTML = ''; // Clear existing cards
-
-    availablePasses.forEach(item => {
-        const passItemElement = document.createElement('div');
-        passItemElement.classList.add('pass-item'); // Add class for styling
-        passItemElement.innerHTML = `
-            <h3>${item.name}</h3>
-            <p>${item.description}</p>
-            <div class="price">$${item.price.toFixed(2)} Hours</div>
-            <button onclick="buyPass('${item.id}', ${item.price}, '${item.effect}')">BUY</button>
-        `;
-        passesGrid.appendChild(passItemElement);
-    });
-}
-
-// Function to handle pass purchase
-function buyPass(passId, price, effect) {
-    if (!loggedInUser) {
-        alert("Please log in to purchase passes.");
-        document.getElementById('loginModal').style.display = 'block';
-        return;
-    }
-
-    if (timeBalanceHours >= price) {
-        timeBalanceHours -= price;
-        localStorage.setItem('timeBalance', timeBalanceHours); // Save updated balance
-        // Update balance in account data if the user is logged in
-        if (accounts[loggedInUser]) {
-            accounts[loggedInUser].balance = timeBalanceHours;
+        value = value.replace(/^@+/, '').trim();
+        if (!value) return null;
+        if (kind === 'YouTube') {
+          if (/^(channel\/|c\/|user\/)/i.test(value)) return {kind, value, url: 'https://www.youtube.com/' + value.replace(/^\//, '')};
+          if (/^[A-Za-z0-9_.-]{2,80}$/.test(value)) return {kind, value: '@' + value.replace(/^@/, ''), url: 'https://www.youtube.com/@' + encodeURIComponent(value)};
+          throw new Error('Enter a YouTube handle or full URL.');
         }
-
-        alert(`You have successfully purchased "${availablePasses.find(p => p.id === passId).name}"! Your new balance is ${timeBalanceHours.toFixed(1)} Hours.`);
-        updatePassesDisplay(); // Refresh the display
-
-        // Apply the effect of the purchased pass
-        applyPassEffect(effect);
-    } else {
-        alert("Not enough Time Balance to purchase this pass!");
-    }
-}
-
-// Function to apply the effect of a purchased pass
-function applyPassEffect(effect) {
-    switch (effect) {
-        case "unlockWallpaper":
-            // This pass might enable a UI element or make more wallpapers available.
-            // For now, we'll just log it. You'd need to implement UI changes.
-            alert("Wallpaper unlocking feature is now available!");
-            // Example: make a "more wallpapers" button visible
-            break;
-        case "adFree24h":
-            adFreeUntil = Date.now() + (24 * 60 * 60 * 1000);
-            localStorage.setItem('adFreeUntil', adFreeUntil);
-            alert("Ad-free mode activated for 24 hours!");
-            closeAd(); // Close any currently visible ad
-            break;
-        case "adFree7d":
-            adFreeUntil = Date.now() + (7 * 24 * 60 * 60 * 1000);
-            localStorage.setItem('adFreeUntil', adFreeUntil);
-            alert("Ad-free mode activated for 7 days!");
-            closeAd(); // Close any currently visible ad
-            break;
-        case "customAccent":
-            alert("Custom accent color feature is now available! (Requires further UI implementation)");
-            // Example: enable a color picker in settings
-            break;
-        default:
-            console.log("Unknown pass effect:", effect);
-    }
-}
-
-// --- ACCOUNT MANAGEMENT LOGIC ---
-function login() {
-    const usernameInput = document.getElementById('loginUsername');
-    const passwordInput = document.getElementById('loginPassword');
-    const username = usernameInput.value;
-    const password = passwordInput.value;
-
-    if (accounts[username] && accounts[username].password === password) {
-        loggedInUser = username;
-        // Load balance from account data or localStorage if it exists for this user
-        timeBalanceHours = accounts[username].balance || parseFloat(localStorage.getItem('timeBalance')) || 0;
-        localStorage.setItem('loggedInUser', loggedInUser);
-        localStorage.setItem('timeBalance', timeBalanceHours); // Save balance to localStorage
-        updatePassesDisplay();
-        alert(`Welcome, ${username}! Your time balance is ${timeBalanceHours.toLocaleString()} Hours.`);
-        updateProfileDisplay(); // Update profile display after login
-        document.getElementById('loginModal').style.display = 'none';
-    } else {
-        alert("Invalid username or password.");
-    }
-}
-
-function logout() {
-    loggedInUser = null;
-    // Reset time balance to 0 for guest or based on a default guest account
-    // For now, let's reset to 0 and clear localStorage.
-    timeBalanceHours = 0;
-    localStorage.removeItem('loggedInUser');
-    localStorage.removeItem('timeBalance');
-    localStorage.removeItem('adFreeUntil'); // Also clear ad-free status on logout
-    adFreeUntil = 0; // Reset in-memory variable
-    updatePassesDisplay();
-    alert("You have been logged out.");
-    updateProfileDisplay(); // Update profile display after logout
-    // Optionally, force login modal to show
-    setTimeout(() => {
-        document.getElementById('loginModal').style.display = 'block';
-    }, 1000);
-}
-
-// --- PROFILE DISPLAY LOGIC ---
-const profileNameElement = document.getElementById('profile-name');
-const profileHeaderAvatar = document.getElementById('profile-header-avatar'); // The img tag in header
-const profileHeaderIcon = document.getElementById('profile-header-icon'); // The icon in header
-const profileModalAvatar = document.getElementById('profile-modal-avatar');
-const profileModalUsername = document.getElementById('profile-username');
-const profileModalPassword = document.getElementById('profile-password');
-const profileModal = document.getElementById('profileModal');
-
-function updateProfileDisplay() {
-    if (loggedInUser) {
-        profileNameElement.textContent = loggedInUser;
-        // Update avatar in the header
-        if (accounts[loggedInUser] && accounts[loggedInUser].avatar) {
-            profileHeaderAvatar.src = accounts[loggedInUser].avatar;
-            profileHeaderAvatar.style.display = 'block'; // Show img
-            profileHeaderIcon.style.display = 'none'; // Hide icon
-        } else {
-            profileHeaderAvatar.style.display = 'none'; // Hide img
-            profileHeaderIcon.style.display = 'block'; // Show icon
+        if (kind === 'TikTok') {
+          if (!/^[A-Za-z0-9_.]{2,60}$/.test(value)) throw new Error('Enter a TikTok handle or full URL.');
+          return {kind, value: '@' + value, url: 'https://www.tiktok.com/@' + encodeURIComponent(value)};
         }
-    } else {
-        profileNameElement.textContent = "Guest";
-        profileHeaderAvatar.style.display = 'none'; // Hide img
-        profileHeaderIcon.style.display = 'block'; // Show icon
-    }
-}
-
-function openProfileModal() {
-    if (!loggedInUser) {
-        alert("Please log in to access profile settings.");
-        document.getElementById('loginModal').style.display = 'block';
-        return;
-    }
-    // Populate modal fields
-    profileModalUsername.value = loggedInUser;
-    profileModalPassword.value = ""; // Clear password field
-    if (accounts[loggedInUser] && accounts[loggedInUser].avatar) {
-        profileModalAvatar.src = accounts[loggedInUser].avatar;
-    } else {
-        profileModalAvatar.src = 'https://via.placeholder.com/100'; // Default placeholder
-    }
-    profileModal.style.display = 'block';
-}
-
-function closeProfileModal() {
-    profileModal.style.display = 'none';
-}
-
-function saveProfileChanges() {
-    const newUsername = profileModalUsername.value.trim();
-    const newPassword = profileModalPassword.value.trim();
-
-    if (!newUsername) {
-        alert("Username cannot be empty.");
-        return;
-    }
-
-    // Update username
-    if (newUsername !== loggedInUser) {
-        // Check if username already exists (excluding current user)
-        if (accounts[newUsername] && newUsername !== loggedInUser) {
-            alert("Username already taken.");
-            return;
+        if (kind === 'Instagram') {
+          if (!/^[A-Za-z0-9_.]{1,30}$/.test(value)) throw new Error('Enter an Instagram handle or full URL.');
+          return {kind, value: '@' + value, url: 'https://www.instagram.com/' + encodeURIComponent(value) + '/'};
         }
-        // Update account name and loggedInUser variable
-        const oldUserData = { ...accounts[loggedInUser], balance: timeBalanceHours, avatar: profileModalAvatar.src }; // Preserve balance and avatar
-        delete accounts[loggedInUser];
-        accounts[newUsername] = { ...oldUserData, password: oldUserData.password };
-        loggedInUser = newUsername;
-        localStorage.setItem('loggedInUser', loggedInUser);
-        profileNameElement.textContent = loggedInUser; // Update header name
-    } else {
-        // If username not changed, still update avatar and password if they changed
-        accounts[loggedInUser].avatar = profileModalAvatar.src;
-    }
-
-    // Update password
-    if (newPassword) {
-        accounts[loggedInUser].password = newPassword;
-    }
-
-    alert("Profile updated successfully!");
-    closeProfileModal();
-}
-
-function uploadProfilePicture(event) {
-    const file = event.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const imageUrl = e.target.result;
-            profileModalAvatar.src = imageUrl;
-            // Update header avatar immediately
-            profileHeaderAvatar.src = imageUrl;
-            profileHeaderAvatar.style.display = 'block';
-            profileHeaderIcon.style.display = 'none';
-            // Save avatar to account data
-            if (accounts[loggedInUser]) {
-                accounts[loggedInUser].avatar = imageUrl;
+        if (kind === 'Discord') {
+          return {kind, value: value, url: ''};
+        }
+        return {kind, value, url: ''};
+      }
+      function profileFromForm() {
+        const username = cleanUsername($('username').value);
+        if (!validUsername(username)) throw new Error('Username must be 3–24 characters, with letters/numbers at each end. Use _ or - in the middle.');
+        const displayName = $('displayName').value.trim();
+        if (!displayName) throw new Error('Add a display name.');
+        const socials = {};
+        socials.youtube = normalizeSocial('YouTube', $('youtube').value);
+        socials.tiktok = normalizeSocial('TikTok', $('tiktok').value);
+        socials.instagram = normalizeSocial('Instagram', $('instagram').value);
+        socials.discord = normalizeSocial('Discord', $('discord').value);
+        return {username, displayName: displayName.slice(0, 40), bio: $('bio').value.trim().slice(0, 180), socials, updatedAt: Date.now()};
+      }
+      function initials(profile) {
+        const text = (profile.displayName || profile.username || '?').trim();
+        const bits = text.split(/\s+/); return (bits.length > 1 ? bits[0][0] + bits[1][0] : text.slice(0, 1)).toUpperCase();
+      }
+      function esc(value) {
+        return String(value == null ? '' : value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+      }
+      const socialGlyph = {YouTube:'▶', TikTok:'♪', Instagram:'◎', Discord:'◉'};
+      function socialDisplay(social, username) {
+        if (!social || !social.value) return '';
+        const label = social.kind === 'Discord' ? 'Discord' : social.kind;
+        if (social.url) return `<a class="social-link" href="${esc(social.url)}" target="_blank" rel="noopener noreferrer"><span class="mini-icon">${socialGlyph[social.kind] || '↗'}</span>${esc(label)}</a>`;
+        return `<button type="button" class="social-copy" data-copy="${esc(social.value)}" title="Copy Discord name"><span class="mini-icon">${socialGlyph[social.kind] || '↗'}</span>${esc(label)} · ${esc(social.value)}</button>`;
+      }
+      function cardHTML(profile, online) {
+        const p = sanitizeIncomingProfile(profile);
+        const tags = ['youtube','tiktok','instagram','discord'].map(k => socialDisplay(p.socials[k], p.username)).filter(Boolean).join('');
+        return `<article class="profile-card"><div class="profile-top"><div class="profile-avatar">${esc(initials(p))}</div><div class="profile-name"><strong>${esc(p.displayName)}</strong><div class="handle">@${esc(p.username)}${online ? ' · <span class="online-dot"></span>online' : ''}</div></div><button type="button" class="ghost share-btn" data-username="${esc(p.username)}" aria-label="Copy username">Copy @</button></div>${p.bio ? `<p class="bio">${esc(p.bio)}</p>` : ''}<div class="socials">${tags || '<span class="handle">No socials linked yet.</span>'}</div></article>`;
+      }
+      function sanitizeIncomingProfile(raw) {
+        const profile = raw && typeof raw === 'object' ? raw : {};
+        const username = cleanUsername(profile.username);
+        const socialsRaw = profile.socials && typeof profile.socials === 'object' ? profile.socials : {};
+        const socials = {};
+        for (const [key, kind] of [['youtube','YouTube'],['tiktok','TikTok'],['instagram','Instagram'],['discord','Discord']]) {
+          const item = socialsRaw[key];
+          if (item && typeof item === 'object' && typeof item.value === 'string') {
+            const url = typeof item.url === 'string' ? safeExternalURL(item.url) : '';
+            socials[key] = {kind, value:item.value.slice(0,180), url};
+          } else socials[key] = null;
+        }
+        return {username: validUsername(username) ? username : 'unknown', displayName: String(profile.displayName || username || 'Unknown').slice(0,40), bio: String(profile.bio || '').slice(0,180), socials};
+      }
+      function renderProfiles(profiles, {label='YOUR DIRECTORY', onlineNames=[]} = {}) {
+        $('resultsLabel').textContent = label;
+        $('resultsCount').textContent = `${profiles.length} ${profiles.length === 1 ? 'profile' : 'profiles'}`;
+        const container = $('resultsList');
+        if (!profiles.length) {
+          container.innerHTML = `<div class="empty"><div class="empty-icon">⌕</div><strong>No profiles found</strong><p>Check the username spelling. Local profiles are only on this browser; remote lookup needs the other person to be online.</p></div>`;
+          return;
+        }
+        container.innerHTML = profiles.map(p => cardHTML(p, onlineNames.includes(p.username))).join('');
+        container.querySelectorAll('[data-copy]').forEach(btn => btn.addEventListener('click', () => copyText(btn.dataset.copy, 'Discord name copied')));
+        container.querySelectorAll('.share-btn').forEach(btn => btn.addEventListener('click', () => copyText('@' + btn.dataset.username, 'Username copied')));
+      }
+      function copyText(text, doneMessage) {
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(() => toast(doneMessage)).catch(() => fallbackCopy(text, doneMessage));
+        else fallbackCopy(text, doneMessage);
+      }
+      function fallbackCopy(text, doneMessage) {
+        const area = document.createElement('textarea'); area.value = text; area.style.position='fixed'; area.style.opacity='0'; document.body.appendChild(area); area.select();
+        try { document.execCommand('copy'); toast(doneMessage); } catch (_) { toast('Copy this: ' + text); } area.remove();
+      }
+      function fillForm(profile) {
+        $('username').value = profile.username || '';
+        $('username').readOnly = true;
+        $('displayName').value = profile.displayName || '';
+        $('bio').value = profile.bio || '';
+        $('youtube').value = profile.socials?.youtube?.url || profile.socials?.youtube?.value || '';
+        $('tiktok').value = profile.socials?.tiktok?.url || profile.socials?.tiktok?.value || '';
+        $('instagram').value = profile.socials?.instagram?.url || profile.socials?.instagram?.value || '';
+        $('discord').value = profile.socials?.discord?.url || profile.socials?.discord?.value || '';
+        $('formTitle').textContent = 'Your profile'; $('formSub').textContent = 'Edit your display name, bio, and public social links.';
+        $('saveProfile').textContent = 'Save changes'; $('profileTag').textContent = 'Profile saved'; $('profileTag').classList.remove('offline');
+      }
+      function resetForm() {
+        form.reset(); $('username').readOnly = false; $('formTitle').textContent = 'Make your profile';
+        $('formSub').textContent = 'Claim a username and add the socials you want people to find.';
+        $('saveProfile').textContent = 'Claim username'; $('profileTag').textContent = 'Not signed up'; $('profileTag').classList.add('offline'); setFormStatus('');
+      }
+      function saveProfileLocal(profile) {
+        const profiles = readProfiles(); profiles[profile.username] = profile;
+        if (!writeProfiles(profiles)) return false;
+        currentProfile = profile; localStorage.setItem(CURRENT_KEY, profile.username); fillForm(profile); return true;
+      }
+      function setupIncomingConnections(peer) {
+        peer.on('connection', conn => {
+          conn.on('open', () => {});
+          conn.on('data', data => {
+            if (!data || typeof data !== 'object') return;
+            if (data.type === 'FLAPPER_PROFILE_REQUEST' && currentProfile) {
+              try { conn.send({type:'FLAPPER_PROFILE_RESPONSE', profile: currentProfile}); } catch (_) {}
             }
+          });
+          conn.on('error', () => {});
+        });
+      }
+      function stopActivePeer() {
+        peerBootToken++;
+        if (activePeer) { try { activePeer.destroy(); } catch (_) {} }
+        activePeer = null; currentPeerReady = false;
+        setPeerState('P2P not connected', false);
+      }
+      function claimOnlineId(username, onSuccess, onTaken, onUnavailable) {
+        if (!window.Peer) { onUnavailable('PeerJS did not load.'); return; }
+        stopActivePeer();
+        const token = peerBootToken;
+        let settled = false;
+        const timer = setTimeout(() => {
+          if (settled || token !== peerBootToken) return;
+          settled = true; onUnavailable('The peer service did not respond in time.');
+        }, 9000);
+        let peer;
+        try { peer = new window.Peer(username); } catch (e) { clearTimeout(timer); onUnavailable('Could not start the peer connection.'); return; }
+        activePeer = peer;
+        setupIncomingConnections(peer);
+        peer.on('open', () => {
+          if (token !== peerBootToken) { try { peer.destroy(); } catch (_) {} return; }
+          if (settled) return; settled = true; clearTimeout(timer); activePeer = peer; currentPeerReady = true;
+          setPeerState('P2P online', true); onSuccess();
+        });
+        peer.on('error', err => {
+          if (token !== peerBootToken || settled) return;
+          if (err && err.type === 'unavailable-id') { settled = true; clearTimeout(timer); try { peer.destroy(); } catch (_) {} activePeer = null; currentPeerReady = false; onTaken(); }
+          else if (err && (err.type === 'network' || err.type === 'server-error' || err.type === 'socket-error' || err.type === 'browser-incompatible')) {
+            settled = true; clearTimeout(timer); try { peer.destroy(); } catch (_) {} activePeer = null; currentPeerReady = false; onUnavailable('Peer service unavailable right now.');
+          }
+        });
+        peer.on('disconnected', () => { currentPeerReady = false; setPeerState('P2P disconnected', false); });
+        peer.on('close', () => { currentPeerReady = false; setPeerState('P2P offline', false); });
+      }
+      function connectForProfile(username, done) {
+        if (!window.Peer) { done(null, 'PeerJS could not load.'); return; }
+        let peer = activePeer;
+        let temporary = false;
+        let timeout;
+        let conn = null;
+        let finished = false;
+        const finish = (profile, error) => {
+          if (finished) return; finished = true; clearTimeout(timeout);
+          if (conn) { try { conn.close(); } catch (_) {} }
+          if (temporary && peer) { try { peer.destroy(); } catch (_) {} }
+          done(profile || null, error || null);
+        };
+        if (peer && peer.id === username) { done(currentProfile, null); return; }
+        if (!peer || peer.destroyed || !currentPeerReady) {
+          try { peer = new window.Peer(); temporary = true; }
+          catch (_) { done(null, 'Could not start a peer lookup.'); return; }
+          peer.on('error', err => { if (!finished && temporary) finish(null, err?.type === 'peer-unavailable' ? 'That username is offline or does not exist.' : 'Peer lookup failed.'); });
+          peer.on('open', () => beginConnect());
+          timeout = setTimeout(() => finish(null, 'No online profile responded. Check the username or try again later.'), 11000);
+        } else beginConnect();
+        function beginConnect() {
+          if (finished) return;
+          try { conn = peer.connect(username, {serialization:'json', reliable:true}); }
+          catch (_) { finish(null, 'Could not open a connection to that username.'); return; }
+          conn.on('open', () => { try { conn.send({type:'FLAPPER_PROFILE_REQUEST'}); } catch (_) { finish(null, 'Could not request that profile.'); } });
+          conn.on('data', data => {
+            if (data && data.type === 'FLAPPER_PROFILE_RESPONSE' && data.profile) {
+              const p = sanitizeIncomingProfile(data.profile);
+              if (p.username !== username) { finish(null, 'The connected peer returned a different username.'); return; }
+              finish(p, null);
+            }
+          });
+          conn.on('error', err => finish(null, err?.type === 'peer-unavailable' ? 'That username is offline or does not exist.' : 'Peer connection failed.'));
+          conn.on('close', () => { if (!finished) finish(null, 'The peer closed the connection before sharing a profile.'); });
+          if (!timeout) timeout = setTimeout(() => finish(null, 'No online profile responded. Check the username or try again later.'), 10000);
         }
-        reader.readAsDataURL(file);
-    }
-}
-
-// --- INITIALIZATION ---
-window.onload = () => {
-    // Hide loading screen once everything is loaded
-    hideLoadingScreen();
-
-    // Animate sidebar icons
-    document.querySelectorAll('.sidebar-icon').forEach((el, idx) => {
-        setTimeout(() => {
-            el.style.opacity = '1';
-            el.style.transform = 'scale(1)';
-        }, idx * 50);
-    });
-
-    typeWriter();
-    updateStatusBar(); // Ensure status bar updates on load
-    updatePassesDisplay(); // Initialize pass display with loaded balance
-    changeWallpaper(currentWallpaper); // Apply initial wallpaper
-    setActiveSidebarIcon('home'); // Set Home as active by default
-    updateProfileDisplay(); // Initialize profile display
-
-    // Check for saved login
-    const savedUser = localStorage.getItem('loggedInUser');
-    if (savedUser && accounts[savedUser]) {
-        loggedInUser = savedUser;
-        // Load balance from localStorage if it exists for the saved user
-        timeBalanceHours = parseFloat(localStorage.getItem('timeBalance')) || 0;
-        // If the saved user has a balance in the accounts object, use that if it's higher (or as per your logic)
-        if (accounts[loggedInUser] && typeof accounts[loggedInUser].balance === 'number') {
-             // You might want a more sophisticated merge or priority logic here
-             // For now, let's prioritize localStorage if it exists, otherwise use account data
-             if (localStorage.getItem('timeBalance') === null) {
-                 timeBalanceHours = accounts[loggedInUser].balance;
-             }
+      }
+      async function runSearch(rawQuery) {
+        const query = cleanUsername(rawQuery);
+        $('searchInput').value = rawQuery || '';
+        if (!query) { toast('Enter a username to search.'); $('searchInput').focus(); return; }
+        if (!validUsername(query)) { toast('Use a valid Flapper username (3–24 characters).'); return; }
+        const profiles = readProfiles();
+        if (profiles[query]) {
+          renderProfiles([profiles[query]], {label:'FOUND ON THIS BROWSER'});
+          return;
         }
-        localStorage.setItem('timeBalance', timeBalanceHours); // Ensure localStorage is up-to-date
-        updatePassesDisplay();
-        alert(`Welcome back, ${loggedInUser}!`);
-        updateProfileDisplay(); // Update profile display after loading saved user
-    } else {
-        // If no user logged in, show login modal after a delay
-        setTimeout(() => {
-            document.getElementById('loginModal').style.display = 'block';
-        }, 2000);
-    }
-};
+        $('resultsLabel').textContent = 'LOOKING ONLINE';
+        $('resultsCount').textContent = 'Connecting…';
+        $('resultsList').innerHTML = `<div class="empty"><div class="empty-icon">↗</div><strong>Looking for @${esc(query)}</strong><p>Asking the online peer for their public profile over WebRTC.</p></div>`;
+        connectForProfile(query, (profile, error) => {
+          if (profile) renderProfiles([profile], {label:'FOUND PEER-TO-PEER', onlineNames:[profile.username]});
+          else {
+            $('resultsLabel').textContent = 'SEARCH RESULTS'; $('resultsCount').textContent = '0 profiles';
+            $('resultsList').innerHTML = `<div class="empty"><div class="empty-icon">⌕</div><strong>Couldn't find @${esc(query)}</strong><p>${esc(error || 'No online profile responded.')}<br>They must be online with Flapper open for a direct lookup.</p></div>`;
+          }
+        });
+      }
+      searchForm.addEventListener('submit', event => { event.preventDefault(); runSearch($('searchInput').value); });
+      $('navSearch').addEventListener('click', () => { $('searchPanel').scrollIntoView({behavior:'smooth',block:'start'}); $('searchInput').focus({preventScroll:true}); });
+      $('heroSearch').addEventListener('click', () => { $('searchPanel').scrollIntoView({behavior:'smooth',block:'start'}); setTimeout(() => $('searchInput').focus({preventScroll:true}), 350); });
+      function toProfileForm() { $('profilePanel').scrollIntoView({behavior:'smooth',block:'start'}); setTimeout(() => $('username').focus({preventScroll:true}), 350); }
+      $('navProfile').addEventListener('click', toProfileForm); $('heroCreate').addEventListener('click', toProfileForm);
+      $('clearForm').addEventListener('click', () => { if (currentProfile) { fillForm(currentProfile); setFormStatus('Your saved profile was restored.'); } else resetForm(); });
 
-// --- Initial load for iframes ---
-document.addEventListener('DOMContentLoaded', () => {
-    // Ensure correct sidebar icon is active if not on home
-    const currentSection = window.location.hash.substring(1) || 'home';
-    nav(currentSection);
-    setActiveSidebarIcon(currentSection);
-});
-</script>
+      form.addEventListener('submit', event => {
+        event.preventDefault(); setFormStatus('');
+        let profile;
+        try { profile = profileFromForm(); } catch (err) { setFormStatus(err.message); toast(err.message); return; }
+        const existing = readProfiles();
+        if (currentProfile && profile.username === currentProfile.username) {
+          if (saveProfileLocal(profile)) { setFormStatus('Profile updated on this browser.'); toast('Profile saved.'); }
+          return;
+        }
+        if (existing[profile.username]) { setFormStatus('That username is already taken on this browser. Choose another.'); toast('Username already taken.'); return; }
+        $('saveProfile').disabled = true; $('saveProfile').textContent = 'Checking username…';
+        claimOnlineId(profile.username,
+          () => {
+            $('saveProfile').disabled = false;
+            if (saveProfileLocal(profile)) { setFormStatus('Username claimed while online. Profile saved on this browser.'); toast('Your Flapper profile is live.'); }
+            else { setFormStatus('Peer ID is online, but local profile storage failed.'); }
+          },
+          () => { $('saveProfile').disabled = false; $('saveProfile').textContent = 'Claim username'; setFormStatus('That username is already active on the peer service. Try another.'); toast('Username is taken by an online peer.'); },
+          message => {
+            $('saveProfile').disabled = false; $('saveProfile').textContent = 'Claim username';
+            const localOnly = confirm(message + '\n\nSave a local-only demo profile anyway? This will NOT reserve the username for other people.');
+            if (localOnly) {
+              if (saveProfileLocal(profile)) { setPeerState('Local demo only', false); setFormStatus('Saved locally. This username is NOT reserved globally.'); toast('Local demo profile saved.'); }
+            } else setFormStatus('No profile saved. Try again when the peer service is available.');
+          }
+        );
+      });
+
+      function showAbout() {
+        $('modalTitle').textContent = 'How Flapper works';
+        $('modalText').textContent = 'This is a single-file prototype. Profiles you create are stored only in this browser. PeerJS uses a signaling service so you can search a username without copying offer/answer codes; after the peers connect, the profile is sent over a WebRTC data channel. Both people must have Flapper open for peer lookup. A backend database and authentication are required for a real public directory and permanent username ownership.';
+        $('modalBackdrop').classList.add('show');
+      }
+      $('modalClose').addEventListener('click', () => $('modalBackdrop').classList.remove('show'));
+      $('modalBackdrop').addEventListener('click', event => { if (event.target === $('modalBackdrop')) $('modalBackdrop').classList.remove('show'); });
+
+      // Restore this browser's profile, then reclaim its peer ID if it is not already in use.
+      const profiles = readProfiles();
+      const savedUsername = cleanUsername(localStorage.getItem(CURRENT_KEY) || '');
+      if (savedUsername && profiles[savedUsername]) {
+        currentProfile = profiles[savedUsername]; fillForm(currentProfile);
+        claimOnlineId(savedUsername,
+          () => { setPeerState('P2P online', true); setFormStatus('Your profile is online and ready for username lookups.'); },
+          () => { setPeerState('Username active elsewhere', false); setFormStatus('This username is active in another browser. Local profile is available, but peer lookup is offline here.'); },
+          () => { setPeerState('Local profile only', false); setFormStatus('Profile restored locally. Peer lookup is unavailable until the peer service reconnects.'); }
+        );
+      }
+      if (location.hash && location.hash.startsWith('#@')) {
+        const deepLinkUsername = location.hash.slice(2);
+        if (deepLinkUsername) { $('searchInput').value = deepLinkUsername; }
+      }
+    })();
+  </script>
 </body>
 </html>
